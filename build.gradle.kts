@@ -7,6 +7,8 @@ plugins {
     kotlin("jvm") version Versions.kotlin
     id("io.spring.dependency-management") version Versions.dependency_management
 
+    id("io.gitlab.arturbosch.detekt") version Versions.detekt
+
 }
 
 allprojects {
@@ -21,12 +23,8 @@ subprojects {
     apply {
         plugin<JavaLibraryPlugin>()
         plugin<org.jetbrains.kotlin.gradle.plugin.KotlinPlatformJvmPlugin>()
-    }
+        plugin("io.gitlab.arturbosch.detekt")
 
-    tasks {
-        test {
-            useJUnitPlatform()
-        }
     }
 
     val implementation by configurations
@@ -41,6 +39,10 @@ subprojects {
 
         // This dependency is used by the application.
         implementation("com.google.guava:guava:31.0.1-jre")
+
+        // Formatting
+        detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting".withVer(Versions.detekt))
+
 
         // Testing
         testImplementation("org.junit.jupiter:junit-jupiter".withVer(Versions.junit_jupiter))
@@ -60,6 +62,24 @@ subprojects {
         // Use the Kotlin JUnit integration.
         // testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 
+    }
+
+    tasks {
+        test {
+            useJUnitPlatform()
+        }
+
+        detekt {
+            autoCorrect = false
+            buildUponDefaultConfig = true
+            config = files("$rootDir/detekt-config.yml")
+            reports {
+                html {
+                    enabled = true
+                    destination = file("build/reports/detekt.html")
+                }
+            }
+        }
     }
 
 }
